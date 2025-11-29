@@ -24,6 +24,8 @@ A simple multiplatform app to transfer text from your phone to your PC via a loc
    cargo run -- --http
    ```
 
+You also, could simply download the latest release from the releases page, place it where you want, and just launch it directly as any other app. But if you don't trust it you could also simply build it your self. 
+
 2. Allow the app in your firewall if prompted.
 
 3. Scan the QR code displayed in the GUI with your phone.
@@ -36,7 +38,16 @@ A simple multiplatform app to transfer text from your phone to your PC via a loc
 
 ## Requirements
 - Rust (latest stable)
-- `sudo apt-get install -y cmake nasm mingw-w64` (mingw-w64 and nasm only if installing for windows -> https://github.com/rustls/rustls/issues/1913)
+- `sudo apt-get install -y cmake nasm mingw-w64` (mingw-w64 and nasm only if installing for windows -> https://github.com/rustls/rustls/issues/1913 on WSL) 
 
 ## Note
 Ensure your phone and PC are on the same Wi-Fi network.
+
+
+## Preview
+
+This is how the app looks like:
+
+![gui](gui.png)
+
+Currently tested on Windows, built from WSL. 
