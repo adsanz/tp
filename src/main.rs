@@ -67,6 +67,10 @@ fn main() -> anyhow::Result<()> {
 
     let port = args.port;
     let is_http = args.http;
+    
+    let pc_content = std::sync::Arc::new(std::sync::Mutex::new(String::new()));
+    let pc_content_server = pc_content.clone();
+    let pc_content_gui = pc_content.clone();
 
     // Start server in a separate thread
     thread::spawn(move || {
@@ -74,13 +78,13 @@ fn main() -> anyhow::Result<()> {
         rt.block_on(async {
             if !is_http {
                 tracing::info!("Starting server with HTTPS on port {}", port);
-                let res = server::start_server(port, tx, cert_key).await;
+                let res = server::start_server(port, tx, cert_key, pc_content_server).await;
                 if let Err(e) = res {
                     tracing::error!("Server error: {}", e);
                 }
             } else {
                 tracing::info!("Starting server with HTTP on port {}", port);
-                let res = server::start_server(port, tx, cert_key).await;
+                let res = server::start_server(port, tx, cert_key, pc_content_server).await;
                 if let Err(e) = res {
                     tracing::error!("Server error: {}", e);
                 }
@@ -107,6 +111,7 @@ fn main() -> anyhow::Result<()> {
                 ip,
                 port,
                 use_https_gui,
+                pc_content_gui,
             )))
         }),
     )

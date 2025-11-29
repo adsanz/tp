@@ -9,11 +9,12 @@ use axum_server::tls_rustls::RustlsConfig;
 use crossbeam_channel::Sender;
 use serde::Deserialize;
 use std::net::SocketAddr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
 pub struct ServerState {
     pub tx: Sender<String>,
+    pub pc_content: Arc<Mutex<String>>,
 }
 
 #[derive(Deserialize)]
@@ -25,12 +26,14 @@ pub async fn start_server(
     port: u16,
     tx: Sender<String>,
     cert_key: Option<(Vec<u8>, Vec<u8>)>,
+    pc_content: Arc<Mutex<String>>,
 ) -> anyhow::Result<()> {
-    let state = Arc::new(ServerState { tx });
+    let state = Arc::new(ServerState { tx, pc_content });
 
     let app = Router::new()
         .route("/", get(index))
         .route("/send", post(receive_msg))
+        .route("/get_content", get(get_content))
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
@@ -105,7 +108,16 @@ async fn index() -> Html<&'static str> {
     </form>
     <div id="status"></div>
 
+    <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+
+    <h2>Receive from PC</h2>
+    <div style="position: relative;">
+        <textarea id="pc-content" readonly placeholder="Content from PC will appear here..."></textarea>
+        <button id="refresh-btn" style="background-color: #0056b3;">Refresh Content</button>
+    </div>
+
     <script>
+        // Send logic
         document.getElementById('msgForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const content = document.getElementById('content').value;
@@ -139,6 +151,32 @@ async fn index() -> Html<&'static str> {
                 statusDiv.innerHTML = '<p style="color: red;">Network error.</p>';
             }
         });
+
+        // Receive logic
+        const pcContentArea = document.getElementById('pc-content');
+        const refreshBtn = document.getElementById('refresh-btn');
+
+        async function fetchPcContent() {
+            refreshBtn.textContent = 'Refreshing...';
+            try {
+                const response = await fetch('/get_content');
+                if (response.ok) {
+                    const text = await response.text();
+                    pcContentArea.value = text;
+                }
+            } catch (error) {
+                console.error('Error fetching PC content:', error);
+            } finally {
+                refreshBtn.textContent = 'Refresh Content';
+            }
+        }
+
+        refreshBtn.addEventListener('click', fetchPcContent);
+        
+        // Auto-refresh every 5 seconds
+        setInterval(fetchPcContent, 5000);
+        // Initial fetch
+        fetchPcContent();
     </script>
 </body>
 </html>
@@ -157,4 +195,11 @@ async fn receive_msg(
     let _ = state.tx.send(form.content.clone());
     // Return 200 OK
     axum::http::StatusCode::OK
+}
+
+async fn get_content(
+    axum::extract::State(state): axum::extract::State<Arc<ServerState>>,
+) -> impl IntoResponse {
+    let content = state.pc_content.lock().unwrap().clone();
+    content
 }

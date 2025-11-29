@@ -3,6 +3,7 @@ use crossbeam_channel::Receiver;
 use eframe::egui;
 use qr_code::QrCode;
 use std::net::IpAddr;
+use std::sync::{Arc, Mutex};
 
 pub struct TpApp {
     rx: Receiver<String>,
@@ -16,6 +17,8 @@ pub struct TpApp {
     qr_texture: Option<egui::TextureHandle>,
     use_https: bool,
     show_logs: bool,
+    pc_content: Arc<Mutex<String>>,
+    input_content: String,
 }
 
 impl TpApp {
@@ -26,6 +29,7 @@ impl TpApp {
         ip: IpAddr,
         port: u16,
         use_https: bool,
+        pc_content: Arc<Mutex<String>>,
     ) -> Self {
         let clipboard = Clipboard::new().ok();
         Self {
@@ -40,6 +44,8 @@ impl TpApp {
             qr_texture: None,
             use_https,
             show_logs: false,
+            pc_content,
+            input_content: String::new(),
         }
     }
 
@@ -141,6 +147,28 @@ impl eframe::App for TpApp {
                     let text = self.last_content.clone();
                     self.update_clipboard(&text);
                 }
+
+                ui.add_space(20.0);
+                ui.separator();
+                ui.heading("Send to Phone:");
+                
+                ui.add(egui::TextEdit::multiline(&mut self.input_content).hint_text("Type here to send to phone..."));
+                
+                ui.horizontal(|ui| {
+                    if ui.button("Paste from Clipboard").clicked() {
+                        if let Some(cb) = &mut self.clipboard {
+                            if let Ok(text) = cb.get_text() {
+                                self.input_content = text;
+                            }
+                        }
+                    }
+                    if ui.button("Send / Update").clicked() {
+                        if let Ok(mut content) = self.pc_content.lock() {
+                            *content = self.input_content.clone();
+                            tracing::info!("Updated PC content to be available for phone");
+                        }
+                    }
+                });
 
                 ui.add_space(20.0);
                 ui.separator();
