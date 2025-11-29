@@ -151,9 +151,12 @@ impl eframe::App for TpApp {
                 ui.add_space(20.0);
                 ui.separator();
                 ui.heading("Send to Phone:");
-                
-                ui.add(egui::TextEdit::multiline(&mut self.input_content).hint_text("Type here to send to phone..."));
-                
+
+                ui.add(
+                    egui::TextEdit::multiline(&mut self.input_content)
+                        .hint_text("Type here to send to phone..."),
+                );
+
                 ui.horizontal(|ui| {
                     if ui.button("Paste from Clipboard").clicked() {
                         if let Some(cb) = &mut self.clipboard {

@@ -67,7 +67,7 @@ fn main() -> anyhow::Result<()> {
 
     let port = args.port;
     let is_http = args.http;
-    
+
     let pc_content = std::sync::Arc::new(std::sync::Mutex::new(String::new()));
     let pc_content_server = pc_content.clone();
     let pc_content_gui = pc_content.clone();

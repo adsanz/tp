@@ -113,7 +113,7 @@ async fn index() -> Html<&'static str> {
     <h2>Receive from PC</h2>
     <div style="position: relative;">
         <textarea id="pc-content" readonly placeholder="Content from PC will appear here..."></textarea>
-        <button id="refresh-btn" style="background-color: #0056b3;">Refresh Content</button>
+        <button id="refresh-btn" style="background-color: #011f3fff;">Refresh Content</button>
     </div>
 
     <script>
